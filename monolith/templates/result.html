@@ -1,0 +1,190 @@
+{% extends "global.html" %}
+
+{% block page_content %}
+<h1>{{ mod_name }} Result List</h1>
+<hr class="mt-5 mb-5">
+<div class="row">
+  <div class="col-sm-3">
+    <label for="empty">Include Empty</label>
+    <select class="form-control" name="empty" id="empty_select">
+      <option value="false">false</option>
+      <option value="true">true</option>
+    </select>
+  </div>
+  <div class="col-sm-3">
+    <label for="status">Status</label>
+    <select class="form-control" name="status" id="status_select">
+      <option value="all">all</option>
+      <option value="OK">OK</option>
+      <option value="NG">NG</option>
+      <option value="Error">Error</option>
+    </select>
+  </div>
+  <div class="col-sm-4">
+    <label for="query">Query</label>
+    <select class="form-control" name="query" id="query_select">
+      <option value="all">all</option>
+      {% for query in queries %}
+        <option value="{{ query }}">{{ query }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-sm-2">
+    <div class="text-right">
+      <button type="button" class="btn btn-success" id="apply-filter-button">Filter</button>
+    </div>
+  </div>
+</div>
+<hr class="mt-5 mb-5">
+<div class="text-right">
+  <h3>Total {{ total_count }} Results</h3>
+  <button type="button" class="btn btn-primary" id="show-all-button">Show All</button>
+  <button type="button" class="btn btn-primary" id="hide-all-button">Hide All</button>
+</div>
+<ul class="list-group">
+  {% for result in results %}
+  <li class="list-group-item">
+    <div role="button" onclick="$('#result-{{ loop.index }}').collapse('toggle')">
+      {{ result.module_start }} - {{ result.query_name }}
+      {% if result.status.status == 'OK' %}
+        <span class="label label-success">{{ result.status.status }}</span>
+      {% elif result.status.status == 'Error' %}
+        <span class="label label-danger">{{ result.status.status }}</span>
+      {% else %}
+        <span class="label label-warning">{{ result.status.status }}</span>
+      {% endif %}
+      <span class="badge">{{ result.result_count }}</span>
+    </div>
+    <div class="collapse" id='result-{{ loop.index }}'>
+      <div class="table-responsive">
+        <table class="table table-striped">
+          {% if result.status.error_message %}
+            <div class="alert alert-danger" role="alert"> {{ result.status.error_message }} </div>
+          {% endif %}
+          {% if result.status.comment %}
+            <div class="alert alert-info" role="alert"> {{ result.status.comment }} </div>
+          {% endif %}
+          <thead>
+            <tr>
+              {% for header in result.result_header %}
+                <th>{{ header }}</th>
+              {% endfor %}
+            </tr>
+          </thead>
+          <tbody>
+              {% for result_data in result.result %}
+              <tr>
+                {% for header in result.result_header %}
+                  {% if header in result_data.keys() %}
+                    {% if header.endswith(':link') %}
+                      <td> <a href='{{ result_data[header] }}' target="_blank" rel="noopener noreferrer">{{ result_data[header] }}</a></td>
+                    {% else %}
+                      <td> {{ result_data[header] }} </td>
+                    {% endif %}
+                  {% else %}
+                    <td>-</td>
+                  {% endif %}
+                {% endfor %}
+              </tr>
+              {% else %}
+                <td>No Results</td>
+              {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </li>
+  {% endfor %}
+</ul>
+<div class="text-right">
+  <nav aria-label="Page navigation">
+    <ul class="pagination justify-content-end">
+      <li class="page-item"><a class="page-link" id="prev-button">Prev</a></li>
+      <li class="page-item"><a class="page-link" id="next-button">Next</a></li>
+    </ul>
+  </nav>
+</div>
+{% endblock %}
+
+{% block scripts %}
+  {{super()}}
+  <script>
+  $('#apply-filter-button').on('click', function() {
+    var param = '?'
+    var empty = $('#empty_select').val();
+    var status = $('#status_select').val();
+    var query = $('#query_select').val();
+    param += 'empty=' + empty;
+    param += '&status=' + status;
+    param += '&query=' + query;
+    location.search = param;
+  });
+  $('#prev-button').on('click', function() {
+    let current_param = location.search.substring(1).split('&');
+    let page_num = 0
+    let new_params = []
+    for (let i = 0; current_param[i]; i++) {
+      p = current_param[i].split('=')
+      if (p[0] === 'pages'){
+        page_num = parseInt(p[1], 10);
+      }else{
+        new_params.push(p[0] + '=' + p[1]);
+      }
+    }
+    if (page_num > 0){
+      page_num = parseInt(p[1], 10) - 1;
+      new_params.push('pages=' + page_num);
+      let param = '?' + new_params.join('&');
+      location.search = param;
+    }
+  });
+  $('#next-button').on('click', function() {
+    let current_param = location.search.substring(1).split('&');
+    let page_num = 0
+    let limit_num = 10
+    let new_params = []
+    for (let i = 0; current_param[i]; i++) {
+      p = current_param[i].split('=')
+      if (p[0] === 'pages'){
+        page_num = parseInt(p[1], 10)
+      }else if(p[0] === 'limit'){
+        limit_num = parseInt(p[1], 10)
+        new_params.push(p[0] + '=' + p[1]);
+      }else{
+        new_params.push(p[0] + '=' + p[1]);
+      }
+    }
+    if (page_num + 1 <= {{ total_count }} / limit_num){
+      page_num += 1
+      new_params.push('pages=' + page_num);
+      let param = '?' + new_params.join('&');
+      location.search = param;
+    }
+  });
+  $(document).ready( function(){
+    let current_param = location.search.substring(1).split('&');
+    for (let i = 0; current_param[i]; i++) {
+      p = current_param[i].split('=')
+      if (p[0] === 'empty'){
+        $('#empty_select').val(p[1]);
+      } else if (p[0] === 'status'){
+        $('#status_select').val(p[1]);
+      } else if (p[0] === 'query'){
+        $('#query_select').val(p[1]);
+      }
+    }
+  });
+  $('#show-all-button').on('click', function() {
+    var result_li = $('[id^=result-]');
+    for (let i = 0; i < result_li.length; i++) {
+      $('#' + result_li[i].id).collapse('show');
+    };
+  });
+  $('#hide-all-button').on('click', function() {
+    var result_li = $('[id^=result-]');
+    for (let i = 0; i < result_li.length; i++) {
+      $('#' + result_li[i].id).collapse('hide');
+    };
+  });
+  </script>
+{% endblock %}

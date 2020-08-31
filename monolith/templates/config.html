@@ -1,0 +1,497 @@
+{% extends "global.html" %}
+
+{% block page_content %}
+<h1>{{ mod_name }} Query List</h1>
+<pre>{{ default.module_description }}</pre>
+<div class="text-right">
+  <button type="button" class="btn btn-warning" data-toggle="modal" data-target="#runConfirmModal">Run Now</button>
+{% if default.__MOD_ENABLE__ %}
+  <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#enableModuleModal">Enabled</button>
+{% else %}
+  <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#enableModuleModal">Disabled</button>
+{% endif %}
+</div>
+<hr class="mt-5 mb-5">
+<div class="text-right">
+  <button type="button" class="btn btn-success btn-sm" data-toggle="modal" data-target="#editModal" data-query=''>Add New Query <span class="glyphicon glyphicon-plus-sign"></span></button>
+  <button type="button" class="btn btn-info btn-sm" id="query_export_button">Export <span class="glyphicon glyphicon-download"></span></button>
+  <button type="button" class="btn btn-info btn-sm" data-toggle="modal" data-target="#importModal">Import <span class="glyphicon glyphicon-upload"></span></button>
+</div>
+<div class="table-responsive">
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <th>Index</th>
+        <th>Enable</th>
+        <th>Name</th>
+        <th>Query</th>
+        {% for param in default.params %}
+          <th>{{ param.name }}</th>
+        {% endfor %}
+        <th>Channel</th>
+        <th scope="col">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for query in queries %}
+        <tr>
+          <td>{{ query.index }}</td>
+          <td>{{ query.enable }}</td>
+          <td>{{ query.name }}</td>
+          <td>{{ query.query }}</td>
+          {% for param in query.params %}
+            <th>{{ param.value }}</th>
+          {% endfor %}
+          <td>{{ query.channel }}</td>
+          <td>
+            <button type="button" class="btn btn-success btn-sm" data-toggle="modal" data-target="#editModal" data-query='{{ query|tojson }}'><span class="glyphicon glyphicon-pencil"></span></button>
+            <button type="button" class="btn btn-danger btn-sm" data-toggle="modal" data-target="#deleteModal" data-query='{{ query|tojson }}'><span class="glyphicon glyphicon-trash"></span></button>
+          </td>
+        </tr>
+        {% else %}
+          <td>Non Any Queries</td>
+        {% endfor %}
+    </tbody>
+  </table>
+</div>
+<div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title" id="deleteModalLabel">Delete Query.</h3>
+      </div>
+      <div class="modal-body">
+			</div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-danger" id="query_delete_button" data-dismiss="modal">Delete</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="editModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title" id="editModalLabel">Edit Query.</h3>
+      </div>
+      <form role="form" id="query_edit_form">
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="index">Index</label>
+            <input type="text" name="index" id="index" readonly>　　
+          </div>
+          <div class="form-group">
+            <label for="enable">Enable</label>
+            <select class="form-control" name="enable" id="enable">
+              <option value="true">true</option>
+              <option value="false">false</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="name">Name</label>
+            <input type="text" class="form-control" name="name" id="name">
+          </div>
+          <div class="form-group">
+            <label for="query">Query</label>
+            <input type="text" class="form-control" name="query" id="query">
+          </div>
+          {% for param in default.params %}
+            <div class="form-group">
+              <label for="query">{{ param.name }}</label>
+              {% if param.choices %}
+                <select class="form-control" name="param-{{ param.name }}" id="param-{{ param.name }}">
+                  {% for choice in param.choices %}
+                    <option value="{{ choice }}">{{ choice }}</option>
+                  {% endfor %}
+                </select>
+              {% else %}
+                <input type="text" class="form-control" name="param-{{ param.name }}" id="param-{{ param.name }}">
+              {% endif %}
+            </div>
+          {% endfor %}
+          <div class="form-group">
+            <label for="filters">Filters <button type="button" class="btn btn-success btn-sm" data-toggle="modal" data-target="#addFilterModal"><span class="glyphicon glyphicon-plus-sign"></span></button></label>
+            <ul class="list-group" name="filters" id="filters">
+            </ul>
+          </div>
+          <div class="form-group">
+            <label for="expire_date">Expire Date</label>
+            <input type="text" class="form-control" name="expire_date" id="expire_date">
+          </div>
+          <div class="form-group">
+            <label for="channel">Channel</label>
+            <select class="form-control" name="channel" id="channel">
+              {% for channel in channels %}
+                <option value="{{ channel }}">{{ channel }}</option>
+              {% endfor %}
+              <option value="no_notification">No Notificaions</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-success" id="query_update_button" name="update" value="update">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+<div class="modal fade" id="addFilterModal" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title" id="deleteModalLabel">Add Filter</h3>
+      </div>
+      <div class="modal-body">
+        <label for="filter_to_add">Filter</label>
+        <input type="text" class="form-control" name="add_filter" id="add_filter">
+			</div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-success" id="filter_add_button" data-dismiss="modal">OK</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal fade" id="enableModuleModal" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        {% if default.__MOD_ENABLE__ %}
+          <h3 class="modal-title" id="deleteModalLabel">Disable This Module</h3>
+        {% else %}
+          <h3 class="modal-title" id="deleteModalLabel">Enable This Module</h3>
+        {% endif %}
+      </div>
+        <div class="modal-body">
+          {% if default.__MOD_ENABLE__ %}
+            <p>Disable {{mod_name}} Module.</p>
+          {% else %}
+            <p>Enable {{mod_name}} Module.</p>
+          {% endif %}
+  			</div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+          {% if default.__MOD_ENABLE__ %}
+            <button type="button" class="btn btn-danger" id="module_enable_button" data-dismiss="modal">OK</button>
+          {% else %}
+            <button type="button" class="btn btn-primary" id="module_enable_button" data-dismiss="modal">OK</button>
+          {% endif %}
+        </div>
+    </div>
+  </div>
+</div>
+<div class="modal fade" id="importModal" tabindex="-1" role="dialog" aria-labelledby="importModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title" id="deleteModalLabel">Import Query</h3>
+      </div>
+      <div class="modal-body">
+        <label for="import_file">Select Import File</label>
+        <input type="file" class="form-control" name="select_import_file" id="select_import_file">
+			</div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-success" id="import_button" data-dismiss="modal">Import</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal fade" id="runConfirmModal" tabindex="-1" role="dialog" aria-labelledby="runConfirmModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title" id="deleteModalLabel">Run This Module Immediately</h3>
+      </div>
+      <div class="modal-body">
+			</div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-success" id="run_now_button" data-dismiss="modal">OK</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+  {{super()}}
+  <script>
+    var data_to_import = null;
+    $('#deleteModal').on('show.bs.modal', function (event) {
+      var button = $(event.relatedTarget);
+      var query = button.data('query');
+      console.log(query);
+      var modal = $(this);
+      var message = 'You are going to delete \'' + query.name + '\'.';
+      modal.find('.modal-body').text(message);
+      console.log(query.index);
+      modal.find('#query_delete_button').attr('data-query', query.index);
+    });
+    $('#editModal').on('show.bs.modal', function (event) {
+      var button = $(event.relatedTarget);
+      var query = button.data('query');
+      console.log(query);
+      if (query){
+        $('#index').val(query.index);
+        $('#name').val(query.name);
+        $('#query').val(query.query);
+        if (query.enable){
+          $('#enable').val('true');
+        }else{
+          $('#enable').val('false');
+        }
+        var params = query.params
+        for (let i = 0; i < params.length; i++) {
+          $('#param-'+params[i].name).val(params[i].value);
+        }
+        var filters = query.filters
+        var list = document.getElementById("filters");
+        $('#filters').empty();
+        for (let i = 0; i < filters.length; i++) {
+          var filter = document.createElement("li");
+          filter.setAttribute("id", "filter-" + filters[i].id.toString(10));
+          filter.setAttribute("class", "list-group-item");
+          var text = document.createTextNode(filters[i].filter);
+          filter.appendChild(text);
+          var icon = document.createElement("span");
+          icon.setAttribute("class", "glyphicon glyphicon-trash");
+          var rm_button = document.createElement("button");
+          rm_button.setAttribute("class", "btn btn-danger btn-sm");
+          rm_button.setAttribute("type", "button");
+          rm_button.setAttribute("name", "filter_remove_button");
+          rm_button.setAttribute("data-filter-id", "filter-" + filters[i].id.toString(10));
+          rm_button.appendChild(icon);
+          var to_right = document.createElement("div");
+          to_right.setAttribute("class", "text-right");
+          to_right.appendChild(rm_button);
+          filter.appendChild(to_right);
+          var list = document.getElementById("filters");
+          list.appendChild(filter);
+        }
+        $('#expire_date').val(query.expire_date);
+        $('#channel').val(query.channel);
+      }else{
+        $('#index').val('');
+        $('#name').val('');
+        $('#query').val('');
+        $('#enable').val('true');
+        var params = JSON.parse('{{ default.params|tojson }}');
+        console.log(params);
+        for (let i = 0; i < params.length; i++) {
+          $('#param-'+params[i].name).val(params[i].value);
+        }
+        $('#filters').empty();
+        $('#expire_date').val('');
+        $('#channel').val('{{ default.channel }}');
+      }
+    })
+    $('#filter_add_button').on('click', function() {
+      var text = $('#add_filter').val();
+      var filter_ids = $('[id^=filter-]');
+      var next_id = 0
+      for (let i = 0; i < filter_ids.length; i++) {
+        var f_id = parseInt(filter_ids[i].id.replace('filter-', ''), 10)
+        if(f_id > next_id){
+          next_id = f_id;
+        }
+      }
+      next_id++;
+      var list = document.getElementById("filters");
+      var filter = document.createElement("li");
+      filter.setAttribute("id", "filter-" + next_id.toString(10));
+      filter.setAttribute("class", "list-group-item");
+      var text = document.createTextNode(text);
+      filter.appendChild(text);
+      var icon = document.createElement("span");
+      icon.setAttribute("class", "glyphicon glyphicon-trash");
+      var rm_button = document.createElement("button");
+      rm_button.setAttribute("class", "btn btn-danger btn-sm");
+      rm_button.setAttribute("type", "button");
+      rm_button.setAttribute("name", "filter_remove_button");
+      rm_button.setAttribute("data-filter-id", "filter-" + next_id.toString(10));
+      rm_button.appendChild(icon);
+      var to_right = document.createElement("div");
+      to_right.setAttribute("class", "text-right");
+      to_right.appendChild(rm_button);
+      filter.appendChild(to_right);
+      var list = document.getElementById("filters");
+      list.appendChild(filter);
+      $('#add_filter').val('')
+    });
+    $(document).on("click", ".btn[name=filter_remove_button]", function () {
+      var button = $(this);
+      fitlter_id = button.attr('data-filter-id');
+      $('#' + fitlter_id).remove()
+    });
+    $('#query_update_button').on('click', function() {
+      var post_data = {}
+      post_data.action = 'add';
+      post_data.index = $('#index').val();
+      if (post_data.index && post_data.index > 0){
+        post_data.action = 'update';
+      }
+      post_data.name = $('#name').val();
+      post_data.query = $('#query').val();
+      if (post_data.query === ''){
+        alert('Query is Empty.')
+        return false;
+      };
+      post_data.enable = $('#enable').val();
+      var params = []
+      var params_form = $('[id^=param-]');
+      for (let i = 0; i < params_form.length; i++) {
+        var p_id = params_form[i].id.replace('param-', '')
+        params.push({name: p_id, value: params_form[i].value});
+      };
+      post_data.params = params;
+      var filter = []
+      var filter_form = $('[id^=filter-]');
+      for (let i = 0; i < filter_form.length; i++) {
+        var f_id = filter_form[i].id.replace('filter-', '')
+        var filter_content = $('#' + filter_form[i].id).text()
+        console.log(filter_content);
+        filter.push({id: f_id, filter: filter_content});
+      };
+      post_data.filters = filter;
+      post_data.expire_date = $('#expire_date').val();
+      post_data.channel = $('#channel').val();
+      console.log(post_data);
+      var url = '/config/' + '{{ mod_name }}'
+      $.ajax({
+    		url: url,
+    		type: "POST",
+        contentType: "application/json",
+    		dataType: "json",
+    		data: JSON.stringify(post_data)
+    	}).done(function(data) {
+  		  console.log(data);
+    	}).fail(function(data) {
+  		  console.dir(data);
+    	}).always(function(data) {
+  		  $("#editModal").modal('hide');
+        location.href = location.href;
+    	});
+    });
+    $('#module_enable_button').on('click', function() {
+      var post_data = {}
+      var isenable = '{{ default.__MOD_ENABLE__ }}'
+      console.log(isenable);
+      if (isenable === 'True') {
+        post_data.action = 'disable'
+      } else{
+        post_data.action = 'enable'
+      }
+      var url = '/config/' + '{{ mod_name }}'
+      console.log(post_data);
+      $.ajax({
+    		url: url,
+    		type: "POST",
+        contentType: "application/json",
+    		dataType: "json",
+    		data: JSON.stringify(post_data)
+    	}).done(function(data) {
+  		  console.log(data);
+    	}).fail(function(data) {
+  		  console.dir(data);
+    	}).always(function(data) {
+  		  $("#editModal").modal('hide');
+        location.href = location.href;
+    	});
+    });
+    $('#query_delete_button').on('click', function() {
+      var post_data = {}
+      post_data.action = 'delete'
+      var button = $(this);
+      query = button.attr('data-query');
+      post_data.index = query
+      console.log(post_data);
+      var url = '/config/' + '{{ mod_name }}'
+      $.ajax({
+    		url: url,
+    		type: "POST",
+        contentType: "application/json",
+    		dataType: "json",
+    		data: JSON.stringify(post_data)
+    	}).done(function(data) {
+  		  console.log(data);
+    	}).fail(function(data) {
+  		  console.dir(data);
+    	}).always(function(data) {
+  		  $("#editModal").modal('hide');
+        location.href = location.href;
+    	});
+    });
+    $('#addFilterModal').on('hidden.bs.modal', function () {
+      $('body').addClass('modal-open');
+    });
+    $('#query_export_button').on('click', function() {
+      const filename = 'monolith_{{mod_name}}.json';
+      const export_data = '{{ queries|tojson }}';
+      const blob = new Blob([export_data], { type: 'application/json' });
+      const url = (window.URL || window.webkitURL).createObjectURL(blob);
+      const download = document.createElement('a');
+      download.href = url;
+      download.download = filename;
+      download.click();
+      download.remove();
+      (window.URL || window.webkitURL).revokeObjectURL(url);
+    });
+    $(document).on('change', ':file', function() {
+      var input = $(this);
+      var file_num = input.get(0).files.length;
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        data_to_import = JSON.parse(e.target.result);
+      }
+      if (file_num > 0){
+        var file_data = input.get(0).files[0];
+        reader.readAsText(file_data)
+      }
+    });
+    $('#import_button').on('click', function() {
+      console.log(data_to_import);
+      var post_data = {}
+      post_data.action = 'add';
+      post_data.multi = 'true';
+      post_data.queries = data_to_import;
+      console.log(post_data);
+      var url = '/config/' + '{{ mod_name }}'
+      if (data_to_import){
+        $.ajax({
+          url: url,
+          type: "POST",
+          contentType: "application/json",
+          dataType: "json",
+          data: JSON.stringify(post_data)
+        }).done(function(data) {
+          console.log(data);
+        }).fail(function(data) {
+          console.dir(data);
+        }).always(function(data) {
+          $("#editModal").modal('hide');
+          location.href = location.href;
+        });
+      }
+    });
+    $('#run_now_button').on('click', function() {
+      var post_data = {}
+      post_data.action = 'run_job_now';
+      console.log(post_data);
+      var url = '/config/' + '{{ mod_name }}'
+      $.ajax({
+        url: url,
+        type: "POST",
+        contentType: "application/json",
+        dataType: "json",
+        data: JSON.stringify(post_data)
+      }).done(function(data) {
+        console.log(data);
+      }).fail(function(data) {
+        console.dir(data);
+      });
+    });
+  </script>
+{% endblock %}

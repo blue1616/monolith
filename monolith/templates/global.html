@@ -1,0 +1,150 @@
+{% extends "bootstrap/base.html" %}
+
+{% block title %}MONOLITH{% endblock %}
+
+{% block navbar %}
+<nav class="navbar navbar-inverse">
+  <div class="container">
+    <div class="navbar-header">
+      <a class="navbar-brand" href="/">MONOLITH</a>
+    </div>
+    <div class="navbar-collapse collapse">
+      <ul class="nav navbar-nav mr-auto">
+        <li class="dropdown">
+					<a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button">Config<span class="caret"></span></a>
+					<ul class="dropdown-menu" role="menu">
+            {% for module in modules %}
+              <li><a class="dropdown-item" href='/config/{{ module }}'>{{ module }}</a></li>
+            {% endfor %}
+					</ul>
+				</li>
+        <li class="dropdown">
+					<a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button">Results<span class="caret"></span></a>
+					<ul class="dropdown-menu" role="menu">
+            {% for module in modules %}
+              <li><a class="dropdown-item" href='/result/{{ module }}'>{{ module }}</a></li>
+            {% endfor %}
+					</ul>
+				</li>
+      </ul>
+      <ul class="navbar-nav navbar-right">
+        <li class="nav-item">
+          <button type="button" class="btn btn-sm" data-toggle="modal" data-target="#editConfigModal"><span class="glyphicon glyphicon-cog"></span></button>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+<div class="modal fade" id="editConfigModal" tabindex="-1" role="dialog" aria-labelledby="editConfigLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title" id="deleteModalLabel">Edit Global Config</h3>
+      </div>
+      <div class="modal-body">
+        <label for="channels">Channels<button type="button" class="btn btn-success btn-sm" data-toggle="modal" data-target="#addChannelModal"><span class="glyphicon glyphicon-plus-sign"></span></button></label>
+        <ul class="list-group" name="channels" id="channels">
+        </ul>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-success" id="config_update_button" name="update" value="update">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal fade" id="addChannelModal" tabindex="-1" role="dialog" aria-labelledby="addChannelLabel" data-channels='{{ channels }}' aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title" id="deleteModalLabel">Add Channel</h3>
+      </div>
+      <div class="modal-body">
+        <label for="channel_to_add">Channel </label>
+        <input type="text" class="form-control" name="add_channel" id="add_channel">
+			</div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-success" id="channel_add_button" data-dismiss="modal">OK</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+  {{super()}}
+  <script>
+    $('#editConfigModal').on('show.bs.modal', function (event) {
+      var channels = {{ channels|tojson }};
+      var list = document.getElementById("channels");
+      $('#channels').empty();
+      for (let i = 0; i < channels.length; i++) {
+        var channel = document.createElement("li");
+        channel.setAttribute("id", "channel-" + i.toString(10));
+        channel.setAttribute("class", "list-group-item");
+        var text = document.createTextNode(channels[i]);
+        channel.appendChild(text);
+        var list = document.getElementById("channels");
+        list.appendChild(channel);
+      }
+    })
+    $('#channel_add_button').on('click', function() {
+      var text = $('#add_channel').val();
+      var channel_ids = $('[id^=channel-]');
+      var next_id = 0
+      for (let i = 0; i < channel_ids.length; i++) {
+        var f_id = parseInt(channel_ids[i].id.replace('channel-', ''), 10)
+        if(f_id > next_id){
+          next_id = f_id;
+        }
+      }
+      next_id++;
+      var list = document.getElementById("channels");
+      var channel = document.createElement("li");
+      channel.setAttribute("id", "channel-" + next_id.toString(10));
+      channel.setAttribute("class", "list-group-item");
+      var text = document.createTextNode(text);
+      channel.appendChild(text);
+      var list = document.getElementById("channels");
+      list.appendChild(channel);
+      $('#add_channel').val('')
+    });
+    $('#addChannelModal').on('hidden.bs.modal', function () {
+      $('body').addClass('modal-open');
+    });
+    $('#config_update_button').on('click', function() {
+      var post_data = {}
+      post_data.action = 'update';
+      var channels = []
+      var channel_form = $('[id^=channel-]');
+      for (let i = 0; i < channel_form.length; i++) {
+        var channel_name = $('#' + channel_form[i].id).text()
+        channels.push(channel_name);
+      };
+      post_data.channels = channels;
+      console.log(post_data);
+      var url = '/global_config'
+      $.ajax({
+        url: url,
+        type: "POST",
+        contentType: "application/json",
+        dataType: "json",
+        data: JSON.stringify(post_data)
+      }).done(function(data) {
+        console.log(data);
+      }).fail(function(data) {
+        console.dir(data);
+      }).always(function(data) {
+        $("#editModal").modal('hide');
+        location.href = location.href;
+      });
+    });
+  </script>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+{% block page_content %}{% endblock %}
+</div>
+{% endblock %}

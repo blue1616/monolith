@@ -1,0 +1,6 @@
+.git/
+*/__pycache__
+monolith/slackbot_settings.py
+img/*
+LICENSE
+README*

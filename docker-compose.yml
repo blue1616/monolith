@@ -1,0 +1,41 @@
+version: "3"
+services:
+  monolith-app:
+    build: .
+    restart: always
+    environment:
+      DB_HOST: monolith-db
+      DB_PORT: 27017
+    depends_on:
+      - monolith-db
+    volumes:
+      - $PWD/monolith/slackbot_settings.py:/opt/monolith/slackbot_settings.py
+    command: /opt/monolith/startbot.sh
+    networks:
+      - monolith_network
+  monolith-web:
+    build: .
+    restart: always
+    environment:
+      DB_HOST: monolith-db
+      DB_PORT: 27017
+    ports:
+      - 5000:5000
+    depends_on:
+      - monolith-db
+    command: /opt/monolith/startweb.sh
+    networks:
+      - monolith_network
+  monolith-db:
+    image: mongo
+    restart: always
+    volumes:
+      - db-contents:/data/db
+    networks:
+      - monolith_network
+volumes:
+  db-contents:
+    driver: local
+
+networks:
+  monolith_network:
