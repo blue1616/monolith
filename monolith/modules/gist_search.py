@@ -6,6 +6,7 @@ import datetime
 import urllib.parse
 
 description = '''This module searches gist snippet.
+Set search keyword as a Query.
 
 https://gist.github.com/search'''
 

@@ -9,7 +9,7 @@ import urllib.parse
 import time
 
 description = '''This module gets RSS feed.
-Set RSS feed url(v1/v2/atom) to Query.
+Set RSS feed url(v1/v2/atom) as a Query.
 '''
 
 class CustomModule(MonoModule):
@@ -116,8 +116,12 @@ class CustomModule(MonoModule):
     def createMessage(self):
         result = self.getCurrentResult()
         if len(result) != 0:
-            message = ['I found feed about `{}`'.format(self.query['name'])]
-            message += [x[':link'] for x in result]
+            message = ['I found new feed about `{}`'.format(self.query['name'])]
+            for feed in result:
+                m = ''
+                m += feed[':link'] + '\n'
+                m += '>' + feed['title'] + '\n'
+                message.append(m)
         else:
             message = []
         return message

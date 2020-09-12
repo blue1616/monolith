@@ -14,4 +14,5 @@ if [ -z "$DB_NAME" ]; then
   DB_NAME=monolith-database
 fi
 
+sleep 3
 python3 monolith_web.py --db-host=$DB_HOST --db-port=$DB_PORT --db-name=$DB_NAME

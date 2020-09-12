@@ -5,7 +5,7 @@ import os
 import requests
 
 description = '''This Module get malware URLs from the URLhaus database.
-Query earches for tags or URLs.
+Search for tags and URLs by setting keyword as a Query.
 
 https://urlhaus.abuse.ch/api/
 '''

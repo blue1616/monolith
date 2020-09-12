@@ -6,9 +6,11 @@ import re
 import urllib.parse
 
 description = '''This module searches github issues.
+Set search keyword as a Query.
+if "repository" parameter is set, search for a specific repository.
+If you want your search query to be empty, set "__EMPTY__" as Query.
 
-https://developer.github.com/v3/search/
-'''
+https://developer.github.com/v3/search/'''
 
 
 class CustomModule(MonoModule):

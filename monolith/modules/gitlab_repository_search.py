@@ -6,6 +6,7 @@ import lxml.html
 import urllib.parse
 
 description = '''This module searches gitlab repository.
+Set search keyword as a Query.
 
 https://gitlab.com/explore/projects
 '''

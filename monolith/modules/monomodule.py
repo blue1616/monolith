@@ -1,5 +1,4 @@
 import datetime
-import dateutil.parser
 import re
 import time
 import traceback

@@ -5,6 +5,7 @@ from util.slack_post import postData
 import argparse
 from crontab import CronTab
 import datetime
+import dateutil.parser
 from importlib import import_module
 import logging
 from monolithbot import monolith_command
@@ -12,6 +13,7 @@ from multiprocessing import Pool
 import os
 from slackbot.bot import Bot
 import slackbot_settings
+import sys
 import time
 import traceback
 
@@ -41,7 +43,9 @@ def runSearch(db):
             user_keys = db.getUserKeys(module.name)
             empty_key = [x for x in user_keys if x['requred'] and (x['value'] == None or x['value'] == '')]
             if len(empty_key) > 0:
-                logging.info(run_target + ' requires API key. Disable Module.')
+                message = run_target + ' requires API key. Disable Module.'
+                logging.info(message)
+                postData(db.getSlackbotAPIToken(), message, slackbot_settings.channels[0])
                 db.disable(module.name)
             if db.isEnable(module.name):
                 module.user_keys = user_keys
@@ -51,14 +55,16 @@ def runSearch(db):
                     result = module.getResult()
                     db.setExcludeList(result['module'], result['query_id'], module.getExcludeList())
                     expire = getDateObject(query['expire_date'])
-                    if expire != None and datetime.date.today() > expire:
+                    if expire != None and datetime.date.today() >= expire:
                         db.disableQuery(result['module'], result['query_id'])
+                        message = 'Query: `{name}`(id:{id}) is Expired. Disable Query.'.format(name=result['module'], id=result['query_id'])
+                        postData(db.getSlackbotAPIToken(), message, query['channel'])
                     db.setResult(result)
                     if result['status']['status'] == 'OK':
                         error_count = 0
                     else:
                         error_count += 1
-                    if error_count > module.max_error_count:
+                    if error_count >= module.max_error_count:
                         module.enable_extra_interval = True
                         db.setSafetyCount(module.name, 0)
                         break
@@ -78,14 +84,19 @@ def runSearch(db):
                                 postData(db.getSlackbotAPIToken(), messages, query['channel'])
                     if query['__INITIAL__']:
                         db.firstRunIsFinished(result['module'], result['query_id'])
+            if module.enable_extra_interval:
+                logging.info('Something Occurred and Sleep for a while...')
+                message = 'Extra Interval is '
+                for k,v in module.extra_interval.items():
+                    if v != 0:
+                        message += str(v) + k + ' '
+                logging.info(message)
+                db.finishJob(run_target, module.extra_interval)
+            else:
+                db.finishJob(run_target)
+            logging.info(run_target + ' is finished!')
         except:
             logging.error(traceback.format_exc())
-        if module.enable_extra_interval:
-            logging.info('Something Occurred and Sleep for a while...')
-            db.finishJob(run_target, module.extra_interval)
-        else:
-            db.finishJob(run_target)
-        logging.info(run_target + ' is finished!')
         runningJob = db.getRunJob()
 
 def runBot():
@@ -120,11 +131,13 @@ def main():
     crontab_interval = '* * * * *'
     process_number = slackbot_settings.process_number
 
+    file_handler = logging.FileHandler(filename='logs/run.log')
+    stdout_handler = logging.StreamHandler(sys.stdout)
     logging.basicConfig(
-        filename='logs/run.log',
         level=logging.INFO,
         format='%(asctime)s - %(process)d - %(levelname)s - %(name)s - *** %(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S'
+        datefmt='%Y-%m-%d %H:%M:%S',
+        handlers=[file_handler, stdout_handler]
     )
 
     jobs = []
@@ -146,19 +159,28 @@ def main():
         loaded_modules[load_module.name] = load_module
         db.initModule(load_module.name, load_module.getDefaultQuery())
         jobs.append((load_module.name, interval))
-        logging.info(load_module.name + ' is successfully loaded!')
+        logging.info('Module: {name} is successfully loaded!'.format(name=load_module.name))
 
-    db.setGlobalConfig(slackbot_api_token=slackbot_settings.API_TOKEN, channels=slackbot_settings.channels, user_keys=user_keys)
     db.initJob(jobs)
     jobConfigs = [JobConfig(CronTab(crontab_interval), runSearch, (7 * x ) % 60) for x in range(process_number)]
 
-    if slackbot_settings.enable_slackbot:
+    postdata = '---Monolithbot Started. Loaded Modules are as follows.---\n```'
+    postdata += '\n'.join(loaded_modules.keys())
+    postdata += '```'
+    post_succeeded = postData(slackbot_settings.API_TOKEN, postdata, slackbot_settings.channels[0])
+    if post_succeeded:
+        db.setGlobalConfig(slackbot_api_token=slackbot_settings.API_TOKEN, channels=slackbot_settings.channels, user_keys=user_keys)
+    else:
+        logging.error('Slack API is invalid. Disable Slackbot.')
+        db.setGlobalConfig(slackbot_api_token='', channels=slackbot_settings.channels, user_keys=user_keys)
+
+    if slackbot_settings.enable_slackbot and post_succeeded:
         process_number = len(jobConfigs) + 1
     else:
         process_number = len(jobConfigs)
     p = Pool(process_number)
     try:
-        if slackbot_settings.enable_slackbot:
+        if slackbot_settings.enable_slackbot and post_succeeded:
             p.apply_async(runBot)
         p.map(job_controller, jobConfigs)
     except KeyboardInterrupt:

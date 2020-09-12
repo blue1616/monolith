@@ -10,7 +10,10 @@ import urllib.parse
 from lxml.etree import tostring
 
 description = '''This module searches Twitter.
-This module isn't requres Twitter API.
+Set search keyword as a Query.
+
+When adding a user to the search condition, use the users parameter.
+You can specify multiple users by separating them with ",".
 '''
 
 class CustomModule(MonoModule):
@@ -60,7 +63,7 @@ class CustomModule(MonoModule):
         users = self.getParam('users')
         if type(users) == str and users.strip() != '':
             if users.find(',') >= 0:
-                user = [x.strip() for x in users.split(',')]
+                user = [x.strip() for x in users.split(',') if x.strip() != '']
                 query += ' from:' + ' OR from:'.join(user)
             else:
                 query += ' from:' + users.strip()
@@ -102,7 +105,7 @@ class CustomModule(MonoModule):
                 m = ''
                 m += tw[':link']
                 m += ' (FROM: '+ tw['user'] + ')\n'
-                m += '>>>' + tw['tweet'] + '\n'
+                m += '>>' + tw['tweet'] + '\n'
                 message.append(m)
         else:
             message = []

@@ -129,7 +129,7 @@ def setQuery(message, params):
     post_data = ''
     requires = ['module', 'query']
     optional = ['name', 'enable', 'expire_date', 'channel']
-    args = paramParser(params, requires)
+    args = paramParser(params, requires+optional)
     if len([True for x in requires if x in args.keys()]) == len(requires):
         if args['module'] in db.getModuleName():
             if args['query'] == '':
@@ -148,7 +148,7 @@ def setQuery(message, params):
                     opt['channel'] = args['channel']
                 if opt != {}:
                     opt['index'] = query_id
-                    db.updateConfig(name=module, config=data)
+                    db.updateConfig(name=args['module'], config=opt)
                 post_data = 'Query `{query}` is successfully registered(index: {query_id}).'.format(query=args['query'], query_id=query_id)
         else:
             post_data = 'Error: Module not found.'
@@ -381,7 +381,7 @@ def getAllQueries(message, params):
             queries = db.getQueries(args['module'])
             post_data = 'Enabled Query list of {}.\n```'.format(args['module'])
             for q in queries:
-                post_data += '{id}: `{name}` : {query}\n'.format(id=q['index'], name=q['name'], query=q['query'])
+                post_data += '{id}: {name} : {query}\n'.format(id=q['index'], name=q['name'], query=q['query'])
             post_data += '```'
         else:
             post_data = 'Error: Module not found.'
@@ -433,27 +433,25 @@ def getSettings(message, params):
     if post_data != '':
         replay(message, post_data)
 
-@respond_to('getResults:(.*)')
-def getResults(message, params):
+@respond_to('getJobState:(.*)')
+@respond_to('getJS:(.*)')
+def getJobState(message, params):
     post_data = ''
     requires = ['module']
-    optional = ['query', 'limit', 'empty', 'status']
     args = paramParser(params, requires)
     if len([True for x in requires if x in args.keys()]) == len(requires):
-        if args['module'] in db.getModuleName():
-            query = 'all'
-            limit = 10
-            empty = 'true'
-            status = 'all'
-            if 'query' in args.keys():
-                query = args['query']
-            if 'limit' in args.keys() and args['limit'].strip().isdigit():
-                limit = int(args['limit'].strip())
-            if 'empty' in args.keys():
-                empty = args['empty']
-            if 'status' in args.keys():
-                empty = args['status']
-            results = db.getResult(self, args['module'], query=query, limit=limit, empty=empty, status=status)
+        job = db.getJob(args['module'])
+        if job:
+            param_view = [
+                'enable',
+                'last_run',
+                'next_run',
+                'schedule',
+            ]
+            post_data = 'Job State of Module: `{name}`.\n```'.format(name=args['module'])
+            for p in param_view:
+                post_data += '{key}: {value}\n'.format(key=p, value=str(job[p]))
+            post_data += '```'
         else:
             post_data = 'Error: Module not found.'
     else:

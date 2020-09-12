@@ -23,6 +23,7 @@ services:
       - 5000:5000
     depends_on:
       - monolith-db
+      - monolith-app
     command: /opt/monolith/startweb.sh
     networks:
       - monolith_network

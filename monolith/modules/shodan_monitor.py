@@ -5,11 +5,13 @@ import datetime
 import urllib.parse
 
 description = '''This module searches SHODAN with Query.
+Set SHODAN query as a Query.
+
 Signle page result contains up to 100 hosts.
 Hence, check your Query not to exceed signle page limitation.
 https://www.shodan.io/
 
-Practical SHODAN query list,
+Practical SHODAN queries are int this project,
 https://github.com/n0x08/ShodanTools
 '''
 

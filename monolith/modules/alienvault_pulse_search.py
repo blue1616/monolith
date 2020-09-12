@@ -6,6 +6,7 @@ import re
 import urllib.parse
 
 description = '''This module searches AlienVault Pulse.
+Set search keyword as a Query.
 
 https://otx.alienvault.com/api
 '''

@@ -5,6 +5,7 @@ import datetime
 import urllib.parse
 
 description = '''This module searches with prepared google custom search.
+Set search keyword as a Query.
 
 Google Custom Search is required API key and search engine id.
 Google Custom Search API : https://developers.google.com/custom-search/v1/overview
@@ -58,10 +59,17 @@ class CustomModule(MonoModule):
             codes = []
             if 'items' in jsondata.keys():
                 for item in jsondata['items']:
-                    code = {}
-                    code['title'] = item['title']
-                    code['snippet'] = item['snippet']
-                    code[':link'] = item['link']
+                    code = {
+                        'title': '',
+                        'snippet': '',
+                        ':link': '',
+                    }
+                    if 'title' in item.keys():
+                        code['title'] = item['title']
+                    if 'snippet' in item.keys():
+                        code['snippet'] = item['snippet']
+                    if 'link' in item.keys():
+                        code[':link'] = item['link']
                     codes.append(code)
             self.setResultData(codes, filter='DROP', exclude_target=[':link'])
         else:

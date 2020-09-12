@@ -5,6 +5,7 @@ import datetime
 import urllib.parse
 
 description = '''This module searches github repository.
+Set search keyword as a Query.
 
 https://developer.github.com/v3/search/#search-repositories
 '''

@@ -7,6 +7,7 @@ import urllib.parse
 import time
 
 description = '''This module searches dnstwister.
+Set Domain Name as a Query.
 
 https://dnstwister.report/
 '''

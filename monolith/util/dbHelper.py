@@ -191,7 +191,7 @@ class Helper:
             raise Exception('Query not Found.')
         if 'query' in config.keys() and config['query'] != base_query['query'] and config['query'] != '':
             self.setQuery(name, index, config['query'])
-        if 'name' in config.keys() and config['name'] != base_query['name'] and config['query'] != '':
+        if 'name' in config.keys() and config['name'] != base_query['name'] and config['name'] != '':
             self.setQueryName(name, index, config['name'])
         if 'enable' in config.keys() and str(config['enable']).lower() != str(base_query['enable']).lower():
             if str(config['enable']).lower() == 'true':
@@ -263,7 +263,7 @@ class Helper:
             matched = False
             for p in data_params:
                 if p['name'] == param['name']:
-                    param['value'] = param_value
+                    p['value'] = param_value
                     matched = True
                     break
             if not matched:
@@ -364,7 +364,7 @@ class Helper:
             schedule = data['schedule']
             next_time = datetime.datetime.now() + datetime.timedelta(seconds=math.ceil(CronTab(schedule).next()))
             if extra != None:
-                next_time += datetime.timedelta(day=extra['days'], hour=extra['hours'], mitute=extra['minutes'], seconds=extra['seconds'])
+                next_time += datetime.timedelta(days=extra['days'], hours=extra['hours'], minutes=extra['minutes'], seconds=extra['seconds'])
             updatedata = {
                 'enable': True,
                 'next_run': next_time,

@@ -5,6 +5,7 @@ import datetime
 import urllib.parse
 
 description = '''This module searches urlscan.io.
+Set SHODAN query as a Query.
 
 https://urlscan.io/search/#
 '''

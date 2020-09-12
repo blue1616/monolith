@@ -4,9 +4,11 @@ import requests
 import datetime
 import urllib.parse
 
-description = '''This module searches binaryedge with query.
-Single page has 20 results.Query help is below,
-https://docs.binaryedge.io/search/
+description = '''This module searches binaryedge.
+Set binaryedge query as a Query.
+
+Signle page result contains up to 20 hosts.
+Query help is here, https://docs.binaryedge.io/search/
 and, practical queryies are in this project
 https://github.com/balgan/binaryedge-cheatsheet'''
 
