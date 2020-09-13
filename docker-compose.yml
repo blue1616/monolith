@@ -1,7 +1,7 @@
 version: "3"
 services:
   monolith-app:
-    build: .
+    image: blue1616/monolith
     restart: always
     environment:
       DB_HOST: monolith-db
@@ -14,7 +14,7 @@ services:
     networks:
       - monolith_network
   monolith-web:
-    build: .
+    image: blue1616/monolith
     restart: always
     environment:
       DB_HOST: monolith-db

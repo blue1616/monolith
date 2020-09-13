@@ -122,4 +122,4 @@ if __name__ == "__main__":
     global modulename
     dbControler = Helper(args.db_host, args.db_port, args.db_name)
     modulename = dbControler.getModuleName()
-    app.run(debug=True, host='0.0.0.0')
+    app.run(debug=False, host='0.0.0.0')

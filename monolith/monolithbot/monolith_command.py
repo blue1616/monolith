@@ -466,8 +466,6 @@ def getHelp(message):
 \'disableModule: {module}\'\tDisable module.
 \'setQuery: {module}; {query};\'\tAdd [query] as New Search query with Default Settings. And, able to continue to specify query parameters(name, enable, expire_date, channel) as an optional argument
  (abbreviation=setQ:)
-\'setQuery: {module}; {query};\'\tAdd [query] as New Search query with Default Settings. And, able to continue to specify query parameters(name, enable, expire_date, channel) as an optional argument
- (abbreviation=setQ:)
 \'removeQuery: {module}; {query}\'tRemove the Search query indicated by query index.
  (abbreviation=removeQ:)
 \'enableQuery: {module}; {query}\'\tEnable the Search query indicated by query index.
@@ -487,6 +485,8 @@ def getHelp(message):
 \'getAllQueries: {module};\'\tListing Enabled Search Keywords.
  (abbreviation=getAllQ:)
 \'getSettings: {module}; {query};\'\tShow Setting of the Search Keyword indicated by query index.
+ (abbreviation=getS:)
+\'getJobState: {module};\'\tShow Module Job State.
  (abbreviation=getS:)
 
 \'help:\'\tShow this Message.
