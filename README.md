@@ -39,7 +39,7 @@ Or, you can run it with docker-compose.
 ### Run with Docker
 
 ```sh
-https://github.com/blue1616/monolith.git
+git clone https://github.com/blue1616/monolith.git
 vim monolith/slackbot_settings.py # Edit the configuration.
 docker-compose up -d
 ```

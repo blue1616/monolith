@@ -40,7 +40,7 @@ pip3 install -r requirements
 ### Dockerで動かす
 
 ```sh
-https://github.com/blue1616/monolith.git
+git clone https://github.com/blue1616/monolith.git
 vim monolith/slackbot_settings.py # 設定ファイルを編集します
 docker-compose up -d
 ```
