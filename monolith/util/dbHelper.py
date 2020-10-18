@@ -109,14 +109,24 @@ class Helper:
         return self.config_collection.find_one({'module':name, 'name':'__DEFAULT_SETTING__'})
 
     def enable(self, name):
-        return self.config_collection.find_one_and_update({'module':name, 'name':'__DEFAULT_SETTING__'}, {'$set': {'__MOD_ENABLE__': True}})
+        config = self.config_collection.find_one_and_update({'module':name, 'name':'__DEFAULT_SETTING__'}, {'$set': {'__MOD_ENABLE__': True}})
+        job = self.job_collection.find_one_and_update({'module':name}, {'$set': {'enable': True}})
+        if config and job:
+            return True
+        else:
+            return False
 
     def disable(self, name):
-        return self.config_collection.find_one_and_update({'module':name, 'name':'__DEFAULT_SETTING__'}, {'$set': {'__MOD_ENABLE__': False}})
+        config = self.config_collection.find_one_and_update({'module':name, 'name':'__DEFAULT_SETTING__'}, {'$set': {'__MOD_ENABLE__': False}})
+        job = self.job_collection.find_one_and_update({'module':name}, {'$set': {'enable': False}})
+        if config and job:
+            return True
+        else:
+            return False
 
     def isEnable(self, name):
-        data = self.config_collection.find_one({'module':name, 'name':'__DEFAULT_SETTING__'})
-        if data and data['__MOD_ENABLE__'] == True:
+        data = self.job_collection.find_one({'module':name})
+        if data and data['enable'] == True:
             return True
         else:
             return False
@@ -366,7 +376,6 @@ class Helper:
             if extra != None:
                 next_time += datetime.timedelta(days=extra['days'], hours=extra['hours'], minutes=extra['minutes'], seconds=extra['seconds'])
             updatedata = {
-                'enable': True,
                 'next_run': next_time,
                 'process_id': -1,
                 'status': 'Waiting',

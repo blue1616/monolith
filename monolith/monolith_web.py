@@ -10,11 +10,13 @@ bootstrap = Bootstrap(app)
 
 @app.route('/')
 def hello():
+    modulename = dbControler.getModuleName()
     channels = dbControler.getSlackChannels()
     return render_template('hello.html', modules=modulename, channels=channels)
 
 @app.route('/config/<module>', methods=["GET", "POST"])
 def config(module=None):
+    modulename = dbControler.getModuleName()
     if request.method == "GET":
         default = dbControler.getDefaultConfig(name=module)
         if default == None or not module in modulename:
@@ -76,6 +78,7 @@ def config(module=None):
 
 @app.route('/result/<module>')
 def result(module=None):
+    modulename = dbControler.getModuleName()
     if request.method == "GET":
         channels = dbControler.getSlackChannels()
         page = request.args.get('pages', default='0')
@@ -119,7 +122,5 @@ if __name__ == "__main__":
     parser.add_argument('--db-name', type=str, default='monolith-database', help='DATABASE NAME')
     args = parser.parse_args()
     global dbControler
-    global modulename
     dbControler = Helper(args.db_host, args.db_port, args.db_name)
-    modulename = dbControler.getModuleName()
-    app.run(debug=False, host='0.0.0.0')
+    app.run(debug=True, host='0.0.0.0')

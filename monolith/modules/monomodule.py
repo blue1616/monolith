@@ -29,7 +29,7 @@ class MonoModule:
         self.extra_interval = {
             'days': 0,
             'hours': 0,
-            'minuts': 0,
+            'minutes': 0,
             'seconds': 0,
         }
         self.max_error_count = 10

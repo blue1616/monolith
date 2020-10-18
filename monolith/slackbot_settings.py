@@ -17,7 +17,6 @@ process_number = 2
 
 enable_slackbot = True
 
-# Enabled Module
 modules = [
     'github_repository_search',
     'github_issues_search',
@@ -25,7 +24,7 @@ modules = [
     'gitlab_repository_search',
     'google_custom_search',
     'rss_feed',
-    'twitter',
+    'twitter_api',
     'shodan_monitor',
     'urlscan_monitor',
     'binaryedge_monitor',
@@ -33,6 +32,7 @@ modules = [
     'urlhaus',
     'alienvault_pulse_search',
     'dnstwister',
+#    'your_custom_module',
 ]
 
 # Slack Cannels participating slackbot
@@ -48,15 +48,16 @@ intervals = {
     'gitlab_repository_search': '21 */1 * * *',
     'google_custom_search': '31 */3 * * *',
     'rss_feed': '41 */1 * * *',
-    'twitter': '51 */1 * * *',
+    'twitter_api': '52 */1 * * *',
     'shodan_monitor': '0 17 * * *',
     'urlscan_monitor': '6 */3 * * *',
     'binaryedge_monitor': '0 18 * * *',
     'newly_registered_domains': '0 9 * * *',
     'urlhaus': '0 9 * * *',
     'github_issues_search': '36 */1 * * *',
-    'alienvault_pulse_search': '46 */3 * * *',
+    'alienvault_pulse_search': '46 */1 * * *',
     'dnstwister': '0 0 * * *',
+#    'your_custom_module': '* * * * *',
 }
 
 # Set Your API Keys.
@@ -68,4 +69,8 @@ user_keys = {
     'shodan_api_key': '',
     'urlscan_api_key': '',
     'alienvault_api_key': '',
+    'twitter_consumer_key': '',
+    'twitter_consumer_secret': '',
+    'twitter_access_token': '',
+    'twitter_access_token_secret': '',
 }
