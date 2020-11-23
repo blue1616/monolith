@@ -27,7 +27,7 @@ class CustomModule(MonoModule):
         self.default_query['channel'] = ''
         self.extra_interval['days'] = 8
         self.user_keys = [
-            {'name': 'shodan_api_key', 'value': None, 'requred': True},
+            {'name': 'shodan_api_key', 'value': None, 'required': True},
         ]
 
     def search(self):

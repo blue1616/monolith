@@ -23,6 +23,8 @@ Currently the following functions are implemented.
 |urlhaus|Get specific malware information at URLhaus.||
 |alienvault_pulse_search|Search the Pulse in AlienVault|AlienVault API Key is required.|
 |dnstwister|Search for a domain name with dnstwister||
+|passivetotal_ssl_cert|Search the SSL Certificate in PassiveTotal and find hosts where that certificate has been observed|AlienVault API Key is required.|
+|passivetotal_subdomains|Search for a domain name with PassiveTotal and find subdomains|RiskIQ PassiveTotal API Key is required.|
 
 ## Requirements
 Requires MongoDB and Python3 and the libraries listed in the requirements.

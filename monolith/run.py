@@ -41,7 +41,7 @@ def runSearch(db):
             module.initModule()
             error_count = db.getSafetyCount(module.name)
             user_keys = db.getUserKeys(module.name)
-            empty_key = [x for x in user_keys if x['requred'] and (x['value'] == None or x['value'] == '')]
+            empty_key = [x for x in user_keys if x['required'] and (x['value'] == None or x['value'] == '')]
             if len(empty_key) > 0:
                 message = run_target + ' requires API key. Disable Module.'
                 logging.info(message)

@@ -26,11 +26,11 @@ class CustomModule(MonoModule):
         self.default_query['channel'] = ''
         self.extra_interval['hours'] = 12
         self.user_keys = [
-            {'name': 'google_custom_api_key', 'value': None, 'requred': True},
-            {'name': 'google_custom_search_engine_id_1', 'value': None, 'requred': False},
-            {'name': 'google_custom_search_engine_id_2', 'value': None, 'requred': False},
-            {'name': 'google_custom_search_engine_id_3', 'value': None, 'requred': False},
-            {'name': 'google_custom_search_engine_id_4', 'value': None, 'requred': False},
+            {'name': 'google_custom_api_key', 'value': None, 'required': True},
+            {'name': 'google_custom_search_engine_id_1', 'value': None, 'required': False},
+            {'name': 'google_custom_search_engine_id_2', 'value': None, 'required': False},
+            {'name': 'google_custom_search_engine_id_3', 'value': None, 'required': False},
+            {'name': 'google_custom_search_engine_id_4', 'value': None, 'required': False},
         ]
 
     def search(self):

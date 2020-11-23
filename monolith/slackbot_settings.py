@@ -32,6 +32,8 @@ modules = [
     'urlhaus',
     'alienvault_pulse_search',
     'dnstwister',
+    'passivetotal_ssl_cert',
+    'passivetotal_subdomains',
 #    'your_custom_module',
 ]
 
@@ -57,6 +59,8 @@ intervals = {
     'github_issues_search': '36 */1 * * *',
     'alienvault_pulse_search': '46 */1 * * *',
     'dnstwister': '0 0 * * *',
+    'passivetotal_ssl_cert': '0 13 * * 2',
+    'passivetotal_subdomains': '0 12 * * 2',
 #    'your_custom_module': '* * * * *',
 }
 
@@ -73,4 +77,6 @@ user_keys = {
     'twitter_consumer_secret': '',
     'twitter_access_token': '',
     'twitter_access_token_secret': '',
+    'passivetotal_username': '',
+    'passivetotal_secret_key': '',
 }

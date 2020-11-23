@@ -23,6 +23,8 @@ Slackbot もしくは Web UI から設定を自由に追加、編集が可能で
 |urlhaus|URLhaus で特定のマルウェアの情報を取得します||
 |alienvault_pulse_search|AlienVault の Pulse を検索します|AlienVault の APIキーが必要です|
 |dnstwister|dnstwister でドメイン名を検索します||
+|passivetotal_ssl_cert|PassiveTotalでSSL証明書を検索し、その証明書を利用していたホストを探します|RiskIQ PassiveTotal の APIキーが必要です|
+|passivetotal_subdomains|PassiveTotal でドメイン名を検索し、サブドメインを探します|RiskIQ PassiveTotal の APIキーが必要です|
 
 
 ## Requirements

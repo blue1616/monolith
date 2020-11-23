@@ -35,10 +35,10 @@ class CustomModule(MonoModule):
         self.default_query['channel'] = ''
         self.extra_interval['hours'] = 6
         self.user_keys = [
-            {'name': 'twitter_consumer_key', 'value': None, 'requred': True},
-            {'name': 'twitter_consumer_secret', 'value': None, 'requred': True},
-            {'name': 'twitter_access_token', 'value': None, 'requred': True},
-            {'name': 'twitter_access_token_secret', 'value': None, 'requred': True},
+            {'name': 'twitter_consumer_key', 'value': None, 'required': True},
+            {'name': 'twitter_consumer_secret', 'value': None, 'required': True},
+            {'name': 'twitter_access_token', 'value': None, 'required': True},
+            {'name': 'twitter_access_token_secret', 'value': None, 'required': True},
         ]
 
     def search(self):

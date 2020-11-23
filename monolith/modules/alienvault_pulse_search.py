@@ -26,7 +26,7 @@ class CustomModule(MonoModule):
         self.default_query['channel'] = ''
         self.extra_interval['hours'] = 6
         self.user_keys = [
-            {'name': 'alienvault_api_key', 'value': None, 'requred': True},
+            {'name': 'alienvault_api_key', 'value': None, 'required': True},
         ]
 
     def search(self):
