@@ -1,7 +1,11 @@
 import argparse
 
-from flask import Flask, render_template, abort, request
+from flask import Flask, render_template, abort, request, make_response
 from flask_bootstrap import Bootstrap
+from io import StringIO
+
+import csv
+import json
 
 from util.dbHelper import Helper
 
@@ -103,6 +107,65 @@ def result(module=None):
         (results, count) = dbControler.getResult(name=module, query=query, limit=limit, page=page, empty=empty, status=status)
         return render_template('result.html', modules=modulename, mod_name=module, queries=queries, results=results, total_count=count, channels=channels)
 
+@app.route('/search/')
+def search(module=None):
+    modulename = dbControler.getModuleName()
+    if request.method == "GET":
+        channels = dbControler.getSlackChannels()
+        module = request.args.get('module', default='*')
+        if not module in modulename:
+            module = '*'
+        querys = json.loads(request.args.get('query', default='[]'))
+        if len(querys) == 0:
+            return render_template('search.html', modules=modulename, results=[], result_header=[], total_count=0, channels=channels)
+        (results, result_header) = dbControler.searchResult(name=module, query=querys)
+        pre_header = ['run_datetime', 'query']
+        if module == '*':
+            pre_header = ['module'] + pre_header
+        result_header = pre_header + result_header
+        result_count = len(results)
+        return render_template('search.html', modules=modulename, results=results, result_header=result_header, total_count=result_count, channels=channels)
+
+@app.route('/search/download/<format>')
+def download(format=None):
+    modulename = dbControler.getModuleName()
+    if request.method == "GET":
+        delimiter = ','
+        if format == 'csv':
+            delimiter = ','
+        elif format == 'tsv':
+            delimiter = '\t'
+        else:
+            return abort(400)
+#        channels = dbControler.getSlackChannels()
+        module = request.args.get('module', default='*')
+        if not module in modulename:
+            module = '*'
+        querys = json.loads(request.args.get('query', default='[]'))
+#        if len(querys) == 0:
+#            return render_template('search.html', modules=modulename, results=[], result_header=[], total_count=0, channels=channels)
+        (results, result_header) = dbControler.searchResult(name=module, query=querys, limit=100000)
+        result_count = len(results)
+        if result_count == 0:
+            return abort(404)
+
+        f = StringIO()
+        writer = csv.writer(f, quotechar='"', delimiter=delimiter, quoting=csv.QUOTE_ALL, lineterminator="\n")
+        writer.writerow(result_header)
+        for result in results:
+            row = []
+            for rh in result_header:
+                if rh in result.keys():
+                    row.append(result[rh])
+                else:
+                    row.append('')
+            writer.writerow(row)
+        res = make_response()
+        res.data = f.getvalue()
+        res.headers['Content-Type'] = 'text/csv'
+        res.headers['Content-Disposition'] = 'attachment; filename=search_results.csv'
+        return res
+
 @app.route('/global_config', methods=["POST"])
 def global_config(module=None):
     if request.method == "POST":
@@ -122,5 +185,7 @@ if __name__ == "__main__":
     parser.add_argument('--db-name', type=str, default='monolith-database', help='DATABASE NAME')
     args = parser.parse_args()
     global dbControler
+    print(args.db_host)
+    print(args.db_name)
     dbControler = Helper(args.db_host, args.db_port, args.db_name)
     app.run(debug=True, host='0.0.0.0')

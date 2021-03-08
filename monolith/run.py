@@ -53,14 +53,15 @@ def runSearch(db):
                 for query in db.getEnableQueries(module.name):
                     module.run(query, timestamp)
                     result = module.getResult()
-                    db.setExcludeList(result['module'], result['query_id'], module.getExcludeList())
                     expire = getDateObject(query['expire_date'])
                     if expire != None and datetime.date.today() >= expire:
                         db.disableQuery(result['module'], result['query_id'])
                         message = 'Query: `{name}`(id:{id}) is Expired. Disable Query.'.format(name=result['module'], id=result['query_id'])
+                        message = '{module}: `{name}`(id:{id}) is Expired. Disable Query.'.format(module=result['module'], name=query['name'] , id=result['query_id'])
                         postData(db.getSlackbotAPIToken(), message, query['channel'])
                     db.setResult(result)
                     if result['status']['status'] == 'OK':
+                        db.setExcludeList(result['module'], result['query_id'], module.getExcludeList())
                         error_count = 0
                     else:
                         error_count += 1

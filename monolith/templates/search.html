@@ -1,0 +1,254 @@
+{% extends "global.html" %}
+
+{% block page_content %}
+<h1>Search Result</h1>
+<hr class="mt-5 mb-5">
+<div class="row">
+  <div class="col-sm-3">
+    <label for="empty">Module</label>
+    <select class="form-control" name="module" id="module_select">
+      <option value="all-modules">*</option>
+      {% for module in modules %}
+        <option value="{{ module }}">{{ module }}</option>
+      {% endfor %}
+    </select>
+  </div>
+</div>
+<div class="form-block" id="form_block-0">
+  <div class="row">
+    <div class="col-sm-2">
+      <label for="search_condition">Condition</label>
+      <select class="form-control" name="condition-0" id="cond-select-0">
+        <option value="cond-none">-</option>
+        <option value="cond-and">and</option>
+        <option value="cond-or">or</option>
+      </select>
+    </div>
+    <div class="col-sm-3">
+      <label for="search_column">Column</label>
+      <input type="text" class="form-control" name="input-column-0" id="input-condition-column-0">
+    </div>
+    <div class="col-sm-2">
+      <label for="search_operator">Operator</label>
+      <select class="form-control" name="operator-0" id="operator-select-0">
+        <option value="operator-equal">=</option>
+        <option value="operator-not-equal">!=</option>
+        <option value="operator-contains">contains</option>
+        <option value="operator-not-contains">not contains</option>
+      </select>
+    </div>
+    <div class="col-sm-3">
+      <label for="channel_to_add">Value</label>
+      <input type="text" class="form-control" name="input-value-0" id="input-condition-value-0">
+    </div>
+  </div>
+</div>
+<div class="row">
+  <div class="text-right">
+    <button type="button" class="btn btn-success" id="add-condition-button">Add <span class="glyphicon glyphicon-plus-sign"></span></button>
+    <button type="button" class="btn btn-success" id="search-button">Search</button>
+  </div>
+</div>
+<hr class="mt-5 mb-5">
+<div class="text-right">
+  {% if total_count < 100 %}
+    <h3>Total {{ total_count }} Results</h3>
+  {% else %}
+    <h3>Total {{ total_count }}+ Results</h3>
+  {% endif %}
+  <button type="button" class="btn btn-primary" id="download-csv-button">Download CSV</button>
+  <button type="button" class="btn btn-primary" id="download-tsv-button">Download TSV</button>
+</div>
+<div class="table-responsive">
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        {% for header in result_header %}
+          <th>{{ header }}</th>
+        {% endfor %}
+      </tr>
+    </thead>
+    <tbody>
+        {% for result_data in results %}
+        <tr>
+          {% for header in result_header %}
+            {% if header in result_data.keys() %}
+              {% if header.endswith(':link') %}
+                <td> <a href='{{ result_data[header] }}' target="_blank" rel="noopener noreferrer">{{ result_data[header] }}</a></td>
+              {% else %}
+                <td> {{ result_data[header] }} </td>
+              {% endif %}
+            {% else %}
+              <td>-</td>
+            {% endif %}
+          {% endfor %}
+        </tr>
+        {% else %}
+          <td>No Results</td>
+        {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
+
+{% block scripts %}
+  {{super()}}
+  <script>
+  function getQuery() {
+    var querys = []
+    var form_block = $('[id^=form_block-]');
+    for (let i = 0; i < form_block.length; i++) {
+      var condition = '';
+      var name = '';
+      var operator = '';
+      var value = '';
+      $('#form_block-' + i).find('input, select').each(function(idx, obj) {
+        if ($(obj).attr('name') === 'condition-' + i){
+          condition = $(obj).children(':selected').text()
+        } else if ($(obj).attr('name') === 'input-column-' + i){
+          name = $(obj).val()
+        } else if ($(obj).attr('name') === 'operator-' + i){
+          operator = $(obj).children(':selected').text()
+        } else if ($(obj).attr('name') === 'input-value-' + i){
+          value = $(obj).val()
+        }
+      });
+      if (name != ''){
+        var query = {
+          'condition': condition,
+          'name': name,
+          'operator': operator,
+          'value': value,
+        }
+        if (operator === '!='){
+          query['operator'] = '='
+          query['not'] = 'true'
+        } else if (operator === 'not contains'){
+          query['operator'] = 'contains'
+          query['not'] = 'true'
+        }
+        querys.push(query);
+      }
+    }
+    return querys
+  }
+  $('#search-button').on('click', function() {
+    var param = '?'
+    var module_select = $('#module_select option:selected').text();
+    var querys = getQuery()
+    param += 'module=' + module_select;
+    param += '&query=' + JSON.stringify(querys);
+    console.log(querys);
+    location.search = param;
+  });
+  $('#download-csv-button').on('click', function() {
+    var param = '?'
+    var module_select = $('#module_select option:selected').text();
+    var querys = getQuery()
+    param += 'module=' + module_select;
+    param += '&query=' + JSON.stringify(querys);
+    console.log(querys);
+    const a = document.createElement("a");
+    document.body.appendChild(a);
+    a.download = 'search_result.csv';
+    a.href = '/search/download/csv?' + param;
+    a.click();
+    a.remove();
+  });
+  $('#download-tsv-button').on('click', function() {
+    var param = '?'
+    var module_select = $('#module_select option:selected').text();
+    var querys = getQuery()
+    param += 'module=' + module_select;
+    param += '&query=' + JSON.stringify(querys);
+    console.log(querys);
+    const a = document.createElement("a");
+    document.body.appendChild(a);
+    a.download = 'search_result.csv';
+    a.href = '/search/download/tsv?' + param;
+    a.click();
+    a.remove();
+  });
+  $('#add-condition-button').on('click', function() {
+    var form_block = $('[id^=form_block-]');
+    var next_id = 0
+    for (let i = 0; i < form_block.length; i++) {
+      var f_id = parseInt(form_block[i].id.replace('form_block-', ''), 10)
+      if(f_id > next_id){
+        next_id = f_id;
+      }
+    }
+    var original = $('#form_block-' + next_id);
+    next_id++;
+    original.clone()
+      .insertAfter(original)
+      .attr('id', 'form_block-' + next_id)
+      .end()
+      .find('input, select').each(function(idx, obj) {
+        $(obj).attr({
+          id: $(obj).attr('id').replace(/\-[0-9]+$/, '-' + next_id),
+          name: $(obj).attr('name').replace(/\-[0-9]+$/, '-' + next_id)
+        });
+        $(obj).val('');
+      });
+  });
+  $(document).ready( function(){
+    var params = Object.fromEntries(new URLSearchParams(window.location.search));
+    if (params['module']){
+      var select_tag = document.getElementById('module_select');
+      for(var i=0; i<select_tag.options.length; i++){
+        if(select_tag.options[i].value === params['module']){
+          select_tag.selectedIndex = i;
+          break;
+        }
+      }
+    }
+    if (params['query']){
+      var query = JSON.parse(params['query']);
+      for (let i = 0; i < query.length; i++) {
+        var original = $('#form_block-0');
+        var q = query[i]
+        if (i !== 0){
+          original.clone()
+            .insertAfter(original)
+            .attr('id', 'form_block-' + i)
+            .end()
+            .find('input, select').each(function(idx, obj) {
+              $(obj).attr({
+                id: $(obj).attr('id').replace(/\-[0-9]+$/, '-' + i),
+                name: $(obj).attr('name').replace(/\-[0-9]+$/, '-' + i)
+              });
+              $(obj).val('');
+            });
+        }
+        if (q['name']){
+          $('#input-condition-column-' + i).val(q['name']);
+        }
+        if (q['not'] === 'true'){
+          if (q['operator'] === '='){
+            $('#operator-select-' + i).val('operator-not-equal');
+          }else if (q['operator'] === 'contains'){
+            $('#operator-select-' + i).val('operator-not-contains');
+          }
+        } else {
+          if (q['operator'] === '='){
+            $('#operator-select-' + i).val('operator-equal');
+          }else if (q['operator'] === 'contains'){
+            $('#operator-select-' + i).val('operator-contains');
+          }
+        }
+        if (q['value']){
+          $('#input-condition-value-' + i).val(q['value']);
+        }
+        if (q['condition'] === '-'){
+          $('#cond-select-' + i).val('cond-none');
+        }else if (q['condition'] === 'and'){
+          $('#cond-select-' + i).val('cond-and');
+        }else if (q['condition'] === 'or'){
+          $('#cond-select-' + i).val('cond-or');
+        }
+      };
+    }
+  });
+  </script>
+{% endblock %}

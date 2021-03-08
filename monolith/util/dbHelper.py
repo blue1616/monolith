@@ -335,6 +335,54 @@ class Helper:
             q['$and'].append({'status.status': status})
         return self.result_collection.find(q).sort(sort, -1).skip(skip).limit(limit), self.result_collection.count_documents(q)
 
+    def isQueryMatch(self, data, query):
+        current_state = False
+        condition = 'or'
+        for c in query:
+            if 'condition' in c.keys() and c['condition'] in ['and', 'or']:
+                condition = c['condition']
+            matched = False
+            if c['name'] in data.keys():
+                if c['operator'] == '=' and str(data[c['name']]) == c['value']:
+                    matched = True
+                elif c['operator'] == 'contains' and str(data[c['name']]).find(c['value']) > -1:
+                    matched = True
+            if 'not' in c.keys() and c['not'] == 'true':
+                matched = not matched
+            if condition == 'and' and current_state and matched:
+                current_state = True
+            elif condition == 'or' and (current_state or matched):
+                current_state = True
+            else:
+                current_state = False
+        return current_state
+
+    def searchResult(self, query, name='*', sort=None, limit=100):
+        results = []
+        result_header = []
+        count = 0
+        sort = 'module_start'
+        if name != '*':
+            q = {'$and': [{'module': name}]}
+            q['$and'].append({'result_count': {'$ne': 0}})
+        else:
+            q = {'result_count': {'$ne': 0}}
+        current_page = self.result_collection.find(q).sort(sort, -1)
+        for doc in current_page:
+            if not 'result' in doc.keys():
+                continue
+            for record in doc['result']:
+                if self.isQueryMatch(record, query):
+                    record['module'] = doc['module']
+                    record['run_datetime'] = doc['module_start']
+                    record['query'] = doc['query_name']
+                    results.append(record)
+                    result_header += [rh for rh in doc['result_header'] if not rh in result_header]
+                    count += 1
+                if count > limit:
+                    break
+        return results, result_header
+
     # Control Jobs
     def initJob(self, jobs):
         self.job_collection.remove({})
