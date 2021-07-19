@@ -41,6 +41,10 @@
   <button type="button" class="btn btn-primary" id="show-all-button">Show All</button>
   <button type="button" class="btn btn-primary" id="hide-all-button">Hide All</button>
 </div>
+<div class="text-right">
+  <button type="button" class="btn btn-info" id="download-csv-button">Download CSV</button>
+  <button type="button" class="btn btn-info" id="download-tsv-button">Download TSV</button>
+</div>
 <ul class="list-group">
   {% for result in results %}
   <li class="list-group-item">
@@ -185,6 +189,26 @@
     for (let i = 0; i < result_li.length; i++) {
       $('#' + result_li[i].id).collapse('hide');
     };
+  });
+  $('#download-csv-button').on('click', function() {
+    let current_param = location.search.substring(1);
+    let current_path = location.pathname;
+    const a = document.createElement("a");
+    document.body.appendChild(a);
+    a.download = 'results.csv';
+    a.href = current_path + '/download/csv?' + current_param;
+    a.click();
+    a.remove();
+  });
+  $('#download-tsv-button').on('click', function() {
+    let current_param = location.search.substring(1);
+    let current_path = location.pathname;
+    const a = document.createElement("a");
+    document.body.appendChild(a);
+    a.download = 'results.csv';
+    a.href = current_path + '/download/tsv?' + current_param;
+    a.click();
+    a.remove();
   });
   </script>
 {% endblock %}

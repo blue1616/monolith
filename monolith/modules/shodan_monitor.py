@@ -1,7 +1,6 @@
 from .monomodule import MonoModule
 
 import requests
-import datetime
 import time
 import urllib.parse
 
@@ -69,6 +68,21 @@ class CustomModule(MonoModule):
                     data['org'] = host['org']
                     data['hostname'] = ','.join(host['hostnames'])
                     data['domain'] = ','.join(host['domains'])
+
+                    data['tags'] = ''
+                    data['http_title'] = ''
+                    data['subject_CN'] = ''
+                    data['issuer_CN'] = ''
+
+                    if 'tags' in host.keys():
+                        data['tags'] = ','.join(host['tags'])
+                    if 'http' in host.keys() and 'title' in host['http'].keys():
+                        data['http_title'] = host['http']['title']
+                    if 'ssl' in host.keys() and 'cert' in host['ssl'].keys() and 'subject' in host['ssl']['cert'].keys() and 'CN' in host['ssl']['cert']['subject'].keys():
+                        data['subject_CN'] = host['ssl']['cert']['subject']['CN']
+                    if 'ssl' in host.keys() and 'cert' in host['ssl'].keys() and 'issuer' in host['ssl']['cert'].keys() and 'CN' in host['ssl']['cert']['issuer'].keys():
+                        data['issuer_CN'] = host['ssl']['cert']['issuer']['CN']
+
                     data['data'] = host['data']
                     data['host:link'] = 'https://www.shodan.io/host/' + data['host']
                     hosts.append(data)

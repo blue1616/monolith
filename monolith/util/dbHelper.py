@@ -357,7 +357,7 @@ class Helper:
                 current_state = False
         return current_state
 
-    def searchResult(self, query, name='*', sort=None, limit=100):
+    def searchResult(self, query, name='*', sort=None, limit=100, timerange=(None, None)):
         results = []
         result_header = []
         count = 0
@@ -368,8 +368,21 @@ class Helper:
         else:
             q = {'result_count': {'$ne': 0}}
         current_page = self.result_collection.find(q).sort(sort, -1)
+        if timerange[0] != None:
+            sfrom = datetime.datetime.fromtimestamp(timerange[0])
+        else:
+            sfrom = None
+        if timerange[1] != None:
+            sto = datetime.datetime.fromtimestamp(timerange[1])
+        else:
+            sfrom = None
         for doc in current_page:
             if not 'result' in doc.keys():
+                continue
+            module_start = datetime.datetime.strptime(doc['module_start'], '%Y-%m-%d %H:%M:%S')
+            if sfrom != None and module_start < sfrom:
+                continue
+            if sto != None and module_start > sto:
                 continue
             for record in doc['result']:
                 if self.isQueryMatch(record, query):

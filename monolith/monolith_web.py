@@ -107,6 +107,70 @@ def result(module=None):
         (results, count) = dbControler.getResult(name=module, query=query, limit=limit, page=page, empty=empty, status=status)
         return render_template('result.html', modules=modulename, mod_name=module, queries=queries, results=results, total_count=count, channels=channels)
 
+@app.route('/result/<module>/download/<format>')
+def download_result(module=None, format=None):
+    modulename = dbControler.getModuleName()
+    if request.method == "GET":
+        delimiter = ','
+        if format == 'csv':
+            delimiter = ','
+        elif format == 'tsv':
+            delimiter = '\t'
+        else:
+            return abort(400)
+
+        page = request.args.get('pages', default='0')
+        if page.isdigit():
+            page = int(page)
+        else:
+            page = 0
+        limit = request.args.get('limit', default='10')
+        if limit.isdigit():
+            limit = int(limit)
+        else:
+            limit = 10
+        empty = request.args.get('empty', default='false')
+        status = request.args.get('status', default='all')
+        query = request.args.get('query', default='all')
+        default = dbControler.getDefaultConfig(name=module)
+        if default == None or not module in modulename:
+            return abort(404)
+        queries = [x['name'] for x in dbControler.getQueries(module) if 'name' in x.keys()]
+        if not query:
+            query = queries[0]
+        (results, count) = dbControler.getResult(name=module, query=query, limit=limit, page=page, empty=empty, status=status)
+
+        f = StringIO()
+        writer = csv.writer(f, quotechar='"', delimiter=delimiter, quoting=csv.QUOTE_ALL, lineterminator="\n")
+        result_header = []
+        result_data = {}
+        for result in results:
+            if 'result_header' in result.keys():
+                result_header += result['result_header']
+            records = []
+            if 'result' in result.keys():
+                for record in result['result']:
+                    records.append(record)
+            result_data[(result['module_start'], result['query_name'], result['status']['status'])] = records
+        result_header = list(set(result_header))
+        result_header = ['run_datetime', 'query', 'run_status'] + result_header
+        writer.writerow(result_header)
+
+        for mdata, records in result_data.items():
+            for record in records:
+                row = list(mdata)
+                for rh in result_header[3:]:
+                    if rh in record.keys():
+                        row.append(record[rh])
+                    else:
+                        row.append('')
+                writer.writerow(row)
+        res = make_response()
+        res.data = f.getvalue()
+        res.headers['Content-Type'] = 'text/csv'
+        res.headers['Content-Disposition'] = 'attachment; filename=results.csv'
+        return res
+
 @app.route('/search/')
 def search(module=None):
     modulename = dbControler.getModuleName()
@@ -118,7 +182,17 @@ def search(module=None):
         querys = json.loads(request.args.get('query', default='[]'))
         if len(querys) == 0:
             return render_template('search.html', modules=modulename, results=[], result_header=[], total_count=0, channels=channels)
-        (results, result_header) = dbControler.searchResult(name=module, query=querys)
+        sfrom = request.args.get('sfrom', default=None)
+        if type(sfrom) == str and sfrom.isdecimal():
+            sfrom = int(sfrom[:-3])
+        else:
+            sfrom = None
+        sto = request.args.get('sto', default=None)
+        if type(sto) == str and sto.isdecimal():
+            sto = int(sto[:-3])
+        else:
+            sto = None
+        (results, result_header) = dbControler.searchResult(name=module, query=querys, timerange=(sfrom, sto))
         pre_header = ['run_datetime', 'query']
         if module == '*':
             pre_header = ['module'] + pre_header
@@ -137,14 +211,21 @@ def download(format=None):
             delimiter = '\t'
         else:
             return abort(400)
-#        channels = dbControler.getSlackChannels()
         module = request.args.get('module', default='*')
         if not module in modulename:
             module = '*'
         querys = json.loads(request.args.get('query', default='[]'))
-#        if len(querys) == 0:
-#            return render_template('search.html', modules=modulename, results=[], result_header=[], total_count=0, channels=channels)
-        (results, result_header) = dbControler.searchResult(name=module, query=querys, limit=100000)
+        sfrom = request.args.get('sfrom', default=None)
+        if type(sfrom) == str and sfrom.isdecimal():
+            sfrom = int(sfrom[:-3])
+        else:
+            sfrom = None
+        sto = request.args.get('sto', default=None)
+        if type(sto) == str and sto.isdecimal():
+            sto = int(sto[:-3])
+        else:
+            sto = None
+        (results, result_header) = dbControler.searchResult(name=module, query=querys, limit=100000, timerange=(sfrom, sto))
         result_count = len(results)
         if result_count == 0:
             return abort(404)

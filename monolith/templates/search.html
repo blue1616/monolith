@@ -14,6 +14,22 @@
     </select>
   </div>
 </div>
+<div class="row">
+  <div class="col-sm-2">
+    <label for="search_date">Search Date</label>
+  </div>
+  <div class="col-sm-3">
+    <label for="label_sdate_from">From</label>
+    <input type="text" class="form-control" name="input-sdate-from" id="input-sdate-from-0">
+  </div>
+  <div class="col-sm-1">
+    <label for="between">~</label>
+  </div>
+  <div class="col-sm-3">
+    <label for="label_sdate_to">To</label>
+    <input type="text" class="form-control" name="input-sdate-to" id="input-sdate-to-0">
+  </div>
+</div>
 <div class="form-block" id="form_block-0">
   <div class="row">
     <div class="col-sm-2">
@@ -135,18 +151,41 @@
   $('#search-button').on('click', function() {
     var param = '?'
     var module_select = $('#module_select option:selected').text();
-    var querys = getQuery()
+    var querys = getQuery();
+    let time_from = Date.parse($('#input-sdate-from-0').val());
+    let time_to = Date.parse($('#input-sdate-to-0').val());
+    if (time_from && time_to && time_from > time_to) {
+      console.log('Invalid Time Range.');
+      return
+    }
     param += 'module=' + module_select;
     param += '&query=' + JSON.stringify(querys);
-    console.log(querys);
+    if (time_from) {
+      param += '&sfrom=' + time_from;
+    }
+    if (time_to) {
+      param += '&sto=' + time_to;
+    }
     location.search = param;
   });
   $('#download-csv-button').on('click', function() {
     var param = '?'
     var module_select = $('#module_select option:selected').text();
     var querys = getQuery()
+    let time_from = Date.parse($('#input-sdate-from-0').val());
+    let time_to = Date.parse($('#input-sdate-to-0').val());
+    if (time_from && time_to && time_from > time_to) {
+      console.log('Invalid Time Range.');
+      return
+    }
     param += 'module=' + module_select;
     param += '&query=' + JSON.stringify(querys);
+    if (time_from) {
+      param += '&sfrom=' + time_from;
+    }
+    if (time_to) {
+      param += '&sto=' + time_to;
+    }
     console.log(querys);
     const a = document.createElement("a");
     document.body.appendChild(a);
@@ -159,8 +198,20 @@
     var param = '?'
     var module_select = $('#module_select option:selected').text();
     var querys = getQuery()
+    let time_from = Date.parse($('#input-sdate-from-0').val());
+    let time_to = Date.parse($('#input-sdate-to-0').val());
+    if (time_from && time_to && time_from > time_to) {
+      console.log('Invalid Time Range.');
+      return
+    }
     param += 'module=' + module_select;
     param += '&query=' + JSON.stringify(querys);
+    if (time_from) {
+      param += '&sfrom=' + time_from;
+    }
+    if (time_to) {
+      param += '&sto=' + time_to;
+    }
     console.log(querys);
     const a = document.createElement("a");
     document.body.appendChild(a);
@@ -194,6 +245,21 @@
   });
   $(document).ready( function(){
     var params = Object.fromEntries(new URLSearchParams(window.location.search));
+    if (params['sfrom']){
+      let sfrom = new Date(parseInt(params['sfrom'], 10));
+      $('#input-sdate-from-0').val(sfrom.toISOString().substr(0, 19).replace('T', ' '))
+    }
+    else {
+      $('#input-sdate-from-0').val('')
+    }
+    if (params['sto']){
+      let sto = new Date(parseInt(params['sto'], 10));
+      $('#input-sdate-to-0').val(sto.toISOString().substr(0, 19).replace('T', ' '))
+    }
+    else {
+      var date = new Date();
+      $('#input-sdate-to-0').val(date.toISOString().substr(0, 19).replace('T', ' '))
+    }
     if (params['module']){
       var select_tag = document.getElementById('module_select');
       for(var i=0; i<select_tag.options.length; i++){
